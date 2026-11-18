@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMART PANTRY & EXPIRY // HOME INVENTORY & RECIPES</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-badge">PANTRY-v2</div>
+      <span class="brand-title">SMART PANTRY & EXPIRY</span>
+      <span class="brand-sub font-mono">INVENTORY MANAGEMENT // RECIPE ENGINE</span>
+    </div>
+    <div class="metrics-bar">
+      <div class="metric-item">
+        <span class="label">EXPIRING (&le;3d)</span>
+        <span class="value font-mono text-amber" id="metricExpiring">0 ITEMS</span>
+      </div>
+      <div class="metric-item">
+        <span class="label">EXPIRED</span>
+        <span class="value font-mono text-red" id="metricExpired">0 ITEMS</span>
+      </div>
+      <div class="metric-item">
+        <span class="label">PORT</span>
+        <span class="value font-mono">8019</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <main class="workspace">
+    <!-- Left Sidebar: Location filter & Shopping List -->
+    <aside class="panel side-panel">
+      <!-- Section: Storage Locations -->
+      <div class="panel-section">
+        <div class="section-title">STORAGE ZONES</div>
+        <div class="locations-list" id="locationsList">
+          <button class="loc-btn active" data-loc="ALL"><span>Все локации</span><span class="font-mono text-xs" id="cntAll">0</span></button>
+          <button class="loc-btn" data-loc="Fridge"><span>❄️ Холодильник</span><span class="font-mono text-xs" id="cntFridge">0</span></button>
+          <button class="loc-btn" data-loc="Freezer"><span>🧊 Морозилка</span><span class="font-mono text-xs" id="cntFreezer">0</span></button>
+          <button class="loc-btn" data-loc="Pantry"><span>🥫 Кладовая</span><span class="font-mono text-xs" id="cntPantry">0</span></button>
+          <button class="loc-btn" data-loc="Spice Rack"><span>🧂 Специи</span><span class="font-mono text-xs" id="cntSpices">0</span></button>
+        </div>
+      </div>
+
+      <!-- Section: Shopping List with 1-click sync -->
+      <div class="panel-section flex-1">
+        <div class="section-header">
+          <span class="section-title">SHOPPING LIST</span>
+          <button class="mini-btn text-amber" id="btnSyncExpiring">SYNC EXPIRING</button>
+        </div>
+        <div class="shopping-input-row">
+          <input type="text" id="newShopItemInput" placeholder="Add item (e.g. Молоко 2л)..." class="cyber-input font-mono text-xs">
+          <button class="mini-btn text-amber" id="btnAddShopItem">+</button>
+        </div>
+        <div class="shopping-list-items" id="shoppingListItems"></div>
+      </div>
+
+      <!-- Action: Add Product -->
+      <button class="btn btn-amber" id="btnOpenAddProduct">+ REGISTER FOOD / INVENTORY</button>
+    </aside>
+
+    <!-- Main Viewport: Tabs (Pantry Grid vs Recipe Suggestions) -->
+    <section class="main-viewport">
+      <div class="view-tabs">
+        <button class="v-tab active" data-tab="pantry">ACTIVE FOOD INVENTORY</button>
+        <button class="v-tab" data-tab="recipes">"WHAT CAN I COOK NOW?" (RECIPE MATCH)</button>
+      </div>
+
+      <!-- Tab 1: Pantry Grid -->
+      <div class="tab-pane active" id="panePantry">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ITEM NAME</th>
+                <th>LOCATION</th>
+                <th>QUANTITY</th>
+                <th>EXPIRY DATE</th>
+                <th>TIME REMAINING</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="pantryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 2: Recipes Match -->
+      <div class="tab-pane hidden" id="paneRecipes">
+        <div class="recipes-grid" id="recipesGrid">
+          <!-- Populated from GET /api/recipes/suggestions -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Add Product -->
+  <div class="overlay hidden" id="productModal">
+    <div class="modal-card">
+      <div class="modal-badge">INVENTORY INGEST</div>
+      <h2 class="modal-title">REGISTER PRODUCT TO PANTRY</h2>
+      <div class="modal-form">
+        <div class="input-row">
+          <label>Product Name:</label>
+          <input type="text" id="prodName" placeholder="e.g. Греческий йогурт, Курица..." class="cyber-input">
+        </div>
+        <div class="input-row">
+          <label>Storage Location:</label>
+          <select id="prodLocation" class="cyber-select font-mono">
+            <option value="Fridge">❄️ Холодильник (Fridge)</option>
+            <option value="Freezer">🧊 Морозилка (Freezer)</option>
+            <option value="Pantry">🥫 Кладовая / Шкаф (Pantry)</option>
+            <option value="Spice Rack">🧂 Специи (Spice Rack)</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <label>Quantity & Unit:</label>
+          <div style="display:flex;gap:6px;flex:1;">
+            <input type="number" step="0.1" id="prodQty" value="1.0" class="cyber-input font-mono" style="width:80px;">
+            <input type="text" id="prodUnit" value="шт" class="cyber-input font-mono" style="width:70px;">
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Expiration Date:</label>
+          <input type="date" id="prodExpiry" class="cyber-input font-mono">
+        </div>
+        <button class="btn btn-amber mt-12" id="btnSubmitProduct">SAVE PRODUCT TO SQLITE</button>
+        <button class="btn" id="btnCloseProductModal">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/pantry.js"></script>
+</body>
+</html>
